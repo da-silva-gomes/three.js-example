@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-var STLLoader = require('three-stl-loader')(THREE);
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 
 let scene,
   camera,
@@ -7,13 +7,15 @@ let scene,
   loader,
   material,
   mesh,
-  geometry;
+  geo,
+  mat,
+  wireframeSegment;
 
 init();
 
 function init() {
   camera = new THREE.PerspectiveCamera(
-    30,
+    75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
@@ -21,27 +23,34 @@ function init() {
   camera.position.z = 5;
 
   scene = new THREE.Scene();
-  // geometry = new THREE.IcosahedronGeometry();
-
-  // for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-  //   // we'll move the x & y position of each vertice by a random amount
-  //   geometry.vertices[i].x += -1 + Math.random() * 2;
-  //   geometry.vertices[i].y += -1 + Math.random() * 2;
-  // };
   loader = new STLLoader();
 
-  material = new THREE.MeshBasicMaterial({
-    color: 0xdeff14,
+  material = new THREE.MeshPhongMaterial({
+    color: 0xe8e8e8,
+    emissive: 0xe8e8e8,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
   });
 
-  // mesh = new THREE.Mesh(geometry, material);
-  // scene.add(mesh);
-
   loader.load(
-    './../assets/dino.stl',
+    '../src/assets/dino.stl',
     function (geometry) {
       mesh = new THREE.Mesh(geometry, material);
+
+      mesh.position.set(-5, -5, 6);
+      mesh.rotation.set(- Math.PI / 2, 0 , 0);
+      mesh.scale.set(0.2, 0.2, 0.2);
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
       scene.add(mesh);
+
+      geo = new THREE.WireframeGeometry(mesh.geometry);
+      mat = new THREE.LineBasicMaterial({ color: 0xdeff14, linewidth: 10 });
+      wireframeSegment = new THREE.LineSegments(geo, mat);
+      mesh.add(wireframeSegment);
     },
     (xhr) => {
       console.log((xhr.loaded / xhr.total * 100) + '% loaded')
@@ -50,8 +59,6 @@ function init() {
       console.log(error);
     }
   );
-
-  console.log(scene);
 
   renderer = new THREE.WebGLRenderer({ alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
